@@ -1,2 +1,0 @@
-clear
-ros2 topic pub --once /yumi/id_controller/commands std_msgs/msg/Float64MultiArray "{data: [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.5,     -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.5]}"
