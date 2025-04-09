@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<library path="yumi_id_controller">
+  <class name="yumi_control/YumiInverseDynamicsController"
+         type="yumi_control::YumiInverseDynamicsController"
+         base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Custom inverse dynamics controller for YuMi robot that accepts position setpoints
+    </description>
+  </class>
+</library> 

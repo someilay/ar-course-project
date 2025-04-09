@@ -5,12 +5,14 @@
   <xacro:include filename="$(find yumi-description)/urdf/Gazebo/yumi.gazebo.xacro" />
   <!-- Import Transmissions -->
   <xacro:include filename="$(find yumi-description)/urdf/yumi.transmission.xacro" />
+  <!-- Import Gazebo Ros2 Control -->
+  <xacro:include filename="$(find yumi-description)/urdf/Gazebo/gazebo.urdf.xacro" />
 
   <!-- some constants -->
-  <xacro:property name="joint_damping" value="0.5" />
-  <xacro:property name="max_effort" value="300" />
+  <xacro:property name="joint_damping" value="0.0" />
 
-  <xacro:macro name="yumi" params="parent name hardware_interface *origin">
+  <xacro:macro name="yumi"
+    params="parent name hardware_interface controller_path namespace collision_enabled max_effort *origin">
 
     <link name="yumi_base_link"></link>
 
@@ -36,14 +38,15 @@
         <material name="Light_Grey" />
       </visual>
 
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://yumi-description/meshes/coarse/body.stl" />
-        </geometry>
-        <material name="Light_Grey" />
-      </collision>
-
+      <xacro:if value="${collision_enabled}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://yumi-description/meshes/coarse/body.stl" />
+          </geometry>
+          <material name="Light_Grey" />
+        </collision>
+      </xacro:if>
     </link>
 
 
@@ -76,13 +79,15 @@
         <material name="Grey" />
       </visual>
 
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://yumi-description/meshes/coarse/link_1.stl" />
-        </geometry>
-        <material name="Grey" />
-      </collision>
+      <xacro:if value="${collision_enabled}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://yumi-description/meshes/coarse/link_1.stl" />
+          </geometry>
+          <material name="Grey" />
+        </collision>
+      </xacro:if>
     </link>
 
     <!-- joint between link_1_r and link_2_r -->
@@ -111,13 +116,15 @@
         <material name="Grey" />
       </visual>
 
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://yumi-description/meshes/coarse/link_2.stl" />
-        </geometry>
-        <material name="Grey" />
-      </collision>
+      <xacro:if value="${collision_enabled}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://yumi-description/meshes/coarse/link_2.stl" />
+          </geometry>
+          <material name="Grey" />
+        </collision>
+      </xacro:if>
     </link>
 
     <!-- joint between link_2_r and link_3_r -->
@@ -146,13 +153,15 @@
         <material name="Grey" />
       </visual>
 
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://yumi-description/meshes/coarse/link_3.stl" />
-        </geometry>
-        <material name="Grey" />
-      </collision>
+      <xacro:if value="${collision_enabled}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://yumi-description/meshes/coarse/link_3.stl" />
+          </geometry>
+          <material name="Grey" />
+        </collision>
+      </xacro:if>
     </link>
 
     <!-- joint between link_3_r and link_4_r -->
@@ -181,13 +190,15 @@
         <material name="Grey" />
       </visual>
 
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://yumi-description/meshes/coarse/link_4.stl" />
-        </geometry>
-        <material name="Grey" />
-      </collision>
+      <xacro:if value="${collision_enabled}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://yumi-description/meshes/coarse/link_4.stl" />
+          </geometry>
+          <material name="Grey" />
+        </collision>
+      </xacro:if>
     </link>
 
     <!-- joint between link_4_r and link_5_r -->
@@ -216,13 +227,15 @@
         <material name="Grey" />
       </visual>
 
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://yumi-description/meshes/coarse/link_5.stl" />
-        </geometry>
-        <material name="Grey" />
-      </collision>
+      <xacro:if value="${collision_enabled}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://yumi-description/meshes/coarse/link_5.stl" />
+          </geometry>
+          <material name="Grey" />
+        </collision>
+      </xacro:if>
     </link>
 
     <!-- joint between link_5_r and link_6_r -->
@@ -251,13 +264,15 @@
         <material name="Grey" />
       </visual>
 
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://yumi-description/meshes/coarse/link_6.stl" />
-        </geometry>
-        <material name="Grey" />
-      </collision>
+      <xacro:if value="${collision_enabled}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://yumi-description/meshes/coarse/link_6.stl" />
+          </geometry>
+          <material name="Grey" />
+        </collision>
+      </xacro:if>
     </link>
 
     <!-- joint between link_6_r and link_7_r -->
@@ -286,13 +301,15 @@
         <material name="Grey" />
       </visual>
 
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://yumi-description/meshes/coarse/link_7.stl" />
-        </geometry>
-        <material name="Grey" />
-      </collision>
+      <xacro:if value="${collision_enabled}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://yumi-description/meshes/coarse/link_7.stl" />
+          </geometry>
+          <material name="Grey" />
+        </collision>
+      </xacro:if>
     </link>
 
 
@@ -325,13 +342,15 @@
         <material name="Grey" />
       </visual>
 
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://yumi-description/meshes/coarse/link_1.stl" />
-        </geometry>
-        <material name="Grey" />
-      </collision>
+      <xacro:if value="${collision_enabled}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://yumi-description/meshes/coarse/link_1.stl" />
+          </geometry>
+          <material name="Grey" />
+        </collision>
+      </xacro:if>
     </link>
 
     <!-- joint between link_1_l and link_2_l -->
@@ -360,13 +379,15 @@
         <material name="Grey" />
       </visual>
 
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://yumi-description/meshes/coarse/link_2.stl" />
-        </geometry>
-        <material name="Grey" />
-      </collision>
+      <xacro:if value="${collision_enabled}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://yumi-description/meshes/coarse/link_2.stl" />
+          </geometry>
+          <material name="Grey" />
+        </collision>
+      </xacro:if>
     </link>
 
     <!-- joint between link_2_l and link_3_l -->
@@ -395,13 +416,15 @@
         <material name="Grey" />
       </visual>
 
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://yumi-description/meshes/coarse/link_3.stl" />
-        </geometry>
-        <material name="Grey" />
-      </collision>
+      <xacro:if value="${collision_enabled}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://yumi-description/meshes/coarse/link_3.stl" />
+          </geometry>
+          <material name="Grey" />
+        </collision>
+      </xacro:if>
     </link>
 
     <!-- joint between link_3_l and link_4_l -->
@@ -430,13 +453,15 @@
         <material name="Grey" />
       </visual>
 
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://yumi-description/meshes/coarse/link_4.stl" />
-        </geometry>
-        <material name="Grey" />
-      </collision>
+      <xacro:if value="${collision_enabled}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://yumi-description/meshes/coarse/link_4.stl" />
+          </geometry>
+          <material name="Grey" />
+        </collision>
+      </xacro:if>
     </link>
 
     <!-- joint between link_4_l and link_5_l -->
@@ -465,13 +490,15 @@
         <material name="Grey" />
       </visual>
 
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://yumi-description/meshes/coarse/link_5.stl" />
-        </geometry>
-        <material name="Grey" />
-      </collision>
+      <xacro:if value="${collision_enabled}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://yumi-description/meshes/coarse/link_5.stl" />
+          </geometry>
+          <material name="Grey" />
+        </collision>
+      </xacro:if>
     </link>
 
     <!-- joint between link_5_l and link_6_l -->
@@ -500,13 +527,15 @@
         <material name="Grey" />
       </visual>
 
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://yumi-description/meshes/coarse/link_6.stl" />
-        </geometry>
-        <material name="Grey" />
-      </collision>
+      <xacro:if value="${collision_enabled}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://yumi-description/meshes/coarse/link_6.stl" />
+          </geometry>
+          <material name="Grey" />
+        </collision>
+      </xacro:if>
     </link>
 
     <!-- joint between link_6_l and link_7_l -->
@@ -535,19 +564,21 @@
         <material name="Grey" />
       </visual>
 
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <mesh filename="package://yumi-description/meshes/coarse/link_7.stl" />
-        </geometry>
-        <material name="Grey" />
-      </collision>
+      <xacro:if value="${collision_enabled}">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0" />
+          <geometry>
+            <mesh filename="package://yumi-description/meshes/coarse/link_7.stl" />
+          </geometry>
+          <material name="Grey" />
+        </collision>
+      </xacro:if>
     </link>
 
     <!--Extensions -->
     <xacro:yumi_gazebo name="${name}" />
-    <xacro:yumi_transmission name="${name}" hardware_interface="${hardware_interface}" />
-
+    <!-- <xacro:yumi_transmission name="${name}" hardware_interface="${hardware_interface}" /> -->
+    <xacro:yumi_ros_control name="${name}" max_effort="${max_effort}"
+      controller_path="${controller_path}" namespace="${namespace}" />
   </xacro:macro>
-
 </robot>

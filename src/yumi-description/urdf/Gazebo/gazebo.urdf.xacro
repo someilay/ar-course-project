@@ -1,10 +1,52 @@
 <?xml version="1.0"?>
 <robot name="yumi" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="ros_control_joint" params="name max_effort">
+    <joint name="${name}">
+      <command_interface name="effort">
+        <param name="min">-${max_effort}</param>
+        <param name="max">${max_effort}</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+    </joint>
+  </xacro:macro>
 
-  <gazebo>
-    <plugin name="gazebo_ros_controller" filename="libgazebo_ros_control.so">
-      <robotNamespace>/yumi</robotNamespace>
-    </plugin>
-  </gazebo>
+  <xacro:macro name="yumi_ros_control" params="name max_effort controller_path namespace">
+    <ros2_control name="IgnitionSystem" type="system">
+      <hardware>
+        <plugin>ign_ros2_control/IgnitionSystem</plugin>
+      </hardware>
 
+      <xacro:ros_control_joint name="${name}_joint_1_r" max_effort="${max_effort}" />
+      <xacro:ros_control_joint name="${name}_joint_2_r" max_effort="${max_effort}" />
+      <xacro:ros_control_joint name="${name}_joint_3_r" max_effort="${max_effort}" />
+      <xacro:ros_control_joint name="${name}_joint_4_r" max_effort="${max_effort}" />
+      <xacro:ros_control_joint name="${name}_joint_5_r" max_effort="${max_effort}" />
+      <xacro:ros_control_joint name="${name}_joint_6_r" max_effort="${max_effort}" />
+      <xacro:ros_control_joint name="${name}_joint_7_r" max_effort="${max_effort}" />
+
+      <xacro:ros_control_joint name="${name}_joint_1_l" max_effort="${max_effort}" />
+      <xacro:ros_control_joint name="${name}_joint_2_l" max_effort="${max_effort}" />
+      <xacro:ros_control_joint name="${name}_joint_3_l" max_effort="${max_effort}" />
+      <xacro:ros_control_joint name="${name}_joint_4_l" max_effort="${max_effort}" />
+      <xacro:ros_control_joint name="${name}_joint_5_l" max_effort="${max_effort}" />
+      <xacro:ros_control_joint name="${name}_joint_6_l" max_effort="${max_effort}" />
+      <xacro:ros_control_joint name="${name}_joint_7_l" max_effort="${max_effort}" />
+    </ros2_control>
+
+    <gazebo>
+      <plugin filename="ign_ros2_control-system"
+        name="ign_ros2_control::IgnitionROS2ControlPlugin">
+        <robot_param>robot_description</robot_param>
+        <robot_param_node>robot_state_publisher</robot_param_node>
+        <parameters>${controller_path}</parameters>
+        <ros>
+          <namespace>${namespace}</namespace>
+        </ros>
+      </plugin>
+    </gazebo>
+  </xacro:macro>
 </robot>

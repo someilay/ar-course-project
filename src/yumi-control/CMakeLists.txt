@@ -12,25 +12,60 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 
-add_executable(talker src/publisher_member_function.cpp)
-ament_target_dependencies(talker rclcpp std_msgs)
+# ROS2 Control dependencies
+find_package(controller_interface REQUIRED)
+find_package(hardware_interface REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
+find_package(realtime_tools REQUIRED)
+
+# Find Pinocchio and dependencies
+find_package(Eigen3 REQUIRED)
+find_package(pinocchio REQUIRED)
+find_package(eigenpy REQUIRED)
+find_package(ament_index_cpp REQUIRED)
+
+# Custom controller plugin library
+add_library(
+  yumi_id_controller
+  SHARED
+  src/yumi_id_controller.cpp
+)
+target_include_directories(
+  yumi_id_controller
+  PRIVATE
+  include
+  ${EIGEN3_INCLUDE_DIRS}
+)
+target_link_libraries(
+  yumi_id_controller
+  pinocchio::pinocchio
+  eigenpy::eigenpy
+  ${EIGEN3_LIBRARIES}
+)
+ament_target_dependencies(
+  yumi_id_controller
+  controller_interface
+  hardware_interface
+  pluginlib
+  rclcpp
+  rclcpp_lifecycle
+  realtime_tools
+)
+
+pluginlib_export_plugin_description_file(controller_interface controller_plugins.xml)
 
 install(
   TARGETS
-  talker
-  DESTINATION lib/${PROJECT_NAME}
+  yumi_id_controller
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
 )
 
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
-  set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # comment the line when this package is in a git repo and when
-  # a copyright and license is added to all source files
-  set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
 
 ament_package()

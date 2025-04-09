@@ -38,7 +38,21 @@ RUN apt-get update && \
     ros-${ROS_DISTRO}-xacro \
     ros-${ROS_DISTRO}-simple-launch \
     ros-${ROS_DISTRO}-ros2-control \
-    ros-${ROS_DISTRO}-ros2-controllers
+    ros-${ROS_DISTRO}-ros2-controllers \
+    ros-${ROS_DISTRO}-ign-ros2-control
+
+# Install Pinocchio and dependencies
+RUN apt-get update && apt-get install -y \
+    ros-${ROS_DISTRO}-pinocchio \
+    ros-${ROS_DISTRO}-hpp-fcl \
+    libboost-python1.74-dev \
+    python3.10-dev
+
+# Clear apt-get cache
+RUN rm -rf /var/lib/apt/lists/*
+
+# Create a symlink for Python 3.10 headers
+RUN sudo ln -sf /usr/include/python3.10 /usr/include/boost/python310
 
 # Copy the entrypoint and bashrc scripts so we have 
 # our container's environment set up correctly

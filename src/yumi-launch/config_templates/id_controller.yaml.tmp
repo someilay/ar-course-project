@@ -1,0 +1,30 @@
+{namespace}controller_manager:
+  ros__parameters:
+    update_rate: {update_rate} #Hz
+
+    id_controller:
+      type: yumi_control/YumiInverseDynamicsController
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+{namespace}id_controller:
+  ros__parameters:
+    joints:
+      - {body_name}_joint_1_r
+      - {body_name}_joint_2_r
+      - {body_name}_joint_3_r
+      - {body_name}_joint_4_r
+      - {body_name}_joint_5_r
+      - {body_name}_joint_6_r
+      - {body_name}_joint_7_r
+      - {body_name}_joint_1_l
+      - {body_name}_joint_2_l
+      - {body_name}_joint_3_l
+      - {body_name}_joint_4_l
+      - {body_name}_joint_5_l
+      - {body_name}_joint_6_l
+      - {body_name}_joint_7_l
+    position_gain: 1000.0
+    velocity_gain: 100.0
+    robot_description_topic: {robot_description_topic}
