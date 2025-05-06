@@ -1,0 +1,56 @@
+{namespace}controller_manager:
+  ros__parameters:
+    update_rate: {update_rate} #Hz
+
+    udwadia_controller:
+      type: yumi_control/YumiUdwadiaController
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+{namespace}udwadia_controller:
+  ros__parameters:
+    joints:
+      - {body_name}_joint_1_r
+      - {body_name}_joint_2_r
+      - {body_name}_joint_3_r
+      - {body_name}_joint_4_r
+      - {body_name}_joint_5_r
+      - {body_name}_joint_6_r
+      - {body_name}_joint_7_r
+      - {body_name}_joint_1_l
+      - {body_name}_joint_2_l
+      - {body_name}_joint_3_l
+      - {body_name}_joint_4_l
+      - {body_name}_joint_5_l
+      - {body_name}_joint_6_l
+      - {body_name}_joint_7_l
+    
+    # Control gains
+    position_gain: 100.0
+    velocity_gain: 10.0
+    constraint_position_gain: 100.0
+    constraint_velocity_gain: 10.0
+    
+    # Weights for the QP solver
+    control_weight: 1.0
+    constraint_weight: 1.0
+    
+    # QP solver parameters
+    qp_max_iterations: 100
+    qp_tolerance: 1e-4
+    
+    # Task space control parameters
+    start_link_name: "yumi_link_7_r"
+    end_link_name: "yumi_link_7_l"
+    
+    # Relative transform between end effectors
+    tdiff_x: 0.0
+    tdiff_y: 1.0
+    tdiff_z: 0.0
+    tdiff_roll: 0.0
+    tdiff_pitch: 0.0
+    tdiff_yaw: 0.0
+    
+    # Robot description topic
+    robot_description_topic: {robot_description_topic} 

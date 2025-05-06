@@ -39,7 +39,9 @@ RUN apt-get update && \
     ros-${ROS_DISTRO}-simple-launch \
     ros-${ROS_DISTRO}-ros2-control \
     ros-${ROS_DISTRO}-ros2-controllers \
-    ros-${ROS_DISTRO}-ign-ros2-control
+    ros-${ROS_DISTRO}-ign-ros2-control \
+    ros-${ROS_DISTRO}-proxsuite \
+    ros-${ROS_DISTRO}-moveit-msgs
 
 # Install Pinocchio and dependencies
 RUN apt-get update && apt-get install -y \
@@ -47,6 +49,11 @@ RUN apt-get update && apt-get install -y \
     ros-${ROS_DISTRO}-hpp-fcl \
     libboost-python1.74-dev \
     python3.10-dev
+
+# Install SIMDe
+RUN apt-get update && \
+    apt-get install -y \
+    libsimde-dev
 
 # Clear apt-get cache
 RUN rm -rf /var/lib/apt/lists/*

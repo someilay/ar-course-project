@@ -11,6 +11,9 @@
 
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
+  <depend>trajectory_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>moveit_msgs</depend>
 
   <!-- ROS2 Control dependencies -->
   <depend>controller_interface</depend>
@@ -24,6 +27,7 @@
   <depend>eigenpy</depend>
   <depend>ament_index_cpp</depend>
   <depend>eigen</depend>
+  <depend>proxsuite</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

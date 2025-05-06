@@ -1,10 +1,17 @@
 <?xml version="1.0"?>
-<library path="yumi_id_controller">
+<library path="yumi_controllers">
   <class name="yumi_control/YumiInverseDynamicsController"
          type="yumi_control::YumiInverseDynamicsController"
          base_class_type="controller_interface::ControllerInterface">
     <description>
       Custom inverse dynamics controller for YuMi robot that accepts position setpoints
+    </description>
+  </class>
+  <class name="yumi_control/YumiUdwadiaController"
+         type="yumi_control::YumiUdwadiaController"
+         base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Advanced Udwadia-based controller for YuMi robot that supports task space control for both direct pose commands and trajectory following
     </description>
   </class>
 </library> 
