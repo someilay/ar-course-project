@@ -20,7 +20,13 @@ def generate_launch_description():
     # Arguments values
     ns = launch.substitutions.LaunchConfiguration("namespace")
     use_pose_publisher = launch.substitutions.LaunchConfiguration("use_pose_publisher")
-    use_trajectory_publisher = launch.substitutions.LaunchConfiguration("use_trajectory_publisher")
+    use_trajectory_publisher = launch.substitutions.LaunchConfiguration(
+        "use_trajectory_publisher"
+    )
+    use_gui = launch.substitutions.LaunchConfiguration("use_gui")
+
+    # Topic configurations for GUI
+    target_pose_topic = launch.substitutions.LaunchConfiguration("target_pose_topic")
 
     # Paths
     yumi_launch_pkg_path = launch_ros.substitutions.FindPackageShare(
@@ -28,6 +34,9 @@ def generate_launch_description():
     )
     base_launch_file = launch.substitutions.PathJoinSubstitution(
         [yumi_launch_pkg_path, "launch", "base.launch.py"]
+    )
+    target_pose_topic = launch.substitutions.PathJoinSubstitution(
+        [ns, controller_name_value, "command"]
     )
 
     # Define arguments
@@ -52,6 +61,13 @@ def generate_launch_description():
             description="Start the trajectory publisher that sends a sample trajectory",
         ),
     )
+    ld.add_action(
+        launch.actions.DeclareLaunchArgument(
+            "use_gui",
+            default_value="true",
+            description="Start the GUI for sending commands to the controller",
+        ),
+    )
 
     # Include base launch file
     include_base_launch = launch.actions.IncludeLaunchDescription(
@@ -74,7 +90,7 @@ def generate_launch_description():
         parameters=[
             {"namespace": ns},
             {"controller_name": controller_name_value},
-            {"publish_rate": 10.0}
+            {"publish_rate": 10.0},
         ],
         output="screen",
         condition=launch.conditions.IfCondition(use_pose_publisher),
@@ -86,17 +102,25 @@ def generate_launch_description():
         executable="publish_cartesian_trajectory.py",
         name="trajectory_publisher",
         namespace=ns,
-        parameters=[
-            {"namespace": ns},
-            {"controller_name": controller_name_value}
-        ],
+        parameters=[{"namespace": ns}, {"controller_name": controller_name_value}],
         output="screen",
         condition=launch.conditions.IfCondition(use_trajectory_publisher),
+    )
+
+    # Add the GUI node (conditional)
+    gui_node = launch_ros.actions.Node(
+        package="yumi-udwadia-gui",
+        executable="yumi_gui",
+        name="yumi_udwadia_gui",
+        parameters=[{"target_pose_topic": target_pose_topic}],
+        output="screen",
+        condition=launch.conditions.IfCondition(use_gui),
     )
 
     # Add the publisher nodes and base launch
     ld.add_action(pose_publisher_node)
     ld.add_action(trajectory_publisher_node)
+    ld.add_action(gui_node)
     ld.add_action(include_base_launch)
 
-    return ld 
+    return ld

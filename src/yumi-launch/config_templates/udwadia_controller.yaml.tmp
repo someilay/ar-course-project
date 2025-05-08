@@ -45,7 +45,7 @@
     
     # Relative transform between end effectors
     tdiff_x: 0.0
-    tdiff_y: 0.4
+    tdiff_y: 0.3
     tdiff_z: 0.0
     tdiff_roll: 0.0
     tdiff_pitch: 0.0
@@ -53,7 +53,7 @@
     
     # Initial position and orientation
     initial_position_x: 0.6
-    initial_position_y: -0.2
+    initial_position_y: -0.15
     initial_position_z: 0.5
     initial_orientation_roll: 0.0
     initial_orientation_pitch: 0.0
