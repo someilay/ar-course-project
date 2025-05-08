@@ -41,6 +41,9 @@ def generate_launch_description():
     debug_cartesian_topic = launch.substitutions.PathJoinSubstitution(
         [ns, controller_name_value, "debug", "cartesian"]
     )
+    config_file_path = launch.substitutions.PathJoinSubstitution(
+        ["/tmp", "udwadia_controller.yaml"]
+    )
 
     # Define arguments
     ld.add_action(
@@ -119,6 +122,7 @@ def generate_launch_description():
             {
                 "target_pose_topic": target_pose_topic,
                 "debug_cartesian_topic": debug_cartesian_topic,
+                "config_file_path": config_file_path,
             }
         ],
         output="screen",
