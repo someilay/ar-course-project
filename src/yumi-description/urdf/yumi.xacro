@@ -9,7 +9,7 @@
   <xacro:include filename="$(find yumi-description)/urdf/Gazebo/gazebo.urdf.xacro" />
 
   <!-- some constants -->
-  <xacro:property name="joint_damping" value="0.0" />
+  <xacro:property name="joint_damping" value="0.2" />
 
   <xacro:macro name="yumi"
     params="parent name hardware_interface controller_path namespace collision_enabled max_effort *origin">

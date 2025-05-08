@@ -206,17 +206,6 @@ def generate_launch_description():
         [ns, "controller_manager"]
     )
 
-    # # Add environment variables for Gazebo
-    # gazebo_env_setup = launch.actions.SetEnvironmentVariable(
-    #     name="MESA_GL_VERSION_OVERRIDE", value="3.3"
-    # )
-    # # Enable software rendering
-    # gazebo_sw_rendering = launch.actions.SetEnvironmentVariable(
-    #     name="LIBGL_ALWAYS_SOFTWARE", value="1"
-    # )
-    # ld.add_action(gazebo_env_setup)
-    # ld.add_action(gazebo_sw_rendering)
-
     # Define arguments
     ld.add_action(
         launch.actions.DeclareLaunchArgument(

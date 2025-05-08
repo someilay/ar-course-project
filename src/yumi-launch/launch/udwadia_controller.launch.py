@@ -38,6 +38,9 @@ def generate_launch_description():
     target_pose_topic = launch.substitutions.PathJoinSubstitution(
         [ns, controller_name_value, "command"]
     )
+    trajectory_topic = launch.substitutions.PathJoinSubstitution(
+        [ns, controller_name_value, "trajectory"]
+    )
     debug_cartesian_topic = launch.substitutions.PathJoinSubstitution(
         [ns, controller_name_value, "debug", "cartesian"]
     )
@@ -123,6 +126,7 @@ def generate_launch_description():
                 "target_pose_topic": target_pose_topic,
                 "debug_cartesian_topic": debug_cartesian_topic,
                 "config_file_path": config_file_path,
+                "trajectory_topic": trajectory_topic,
             }
         ],
         output="screen",
