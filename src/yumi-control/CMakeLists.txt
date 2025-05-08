@@ -53,7 +53,7 @@ target_link_libraries(
     proxsuite::proxsuite-vectorized
     ${EIGEN3_LIBRARIES}
 )
-target_compile_options(yumi_controllers PUBLIC "-march=native")
+# target_compile_options(yumi_controllers PUBLIC "-march=native")
 ament_target_dependencies(
     yumi_controllers
     controller_interface

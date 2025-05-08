@@ -8,16 +8,16 @@
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
+#include "geometry_msgs/msg/accel_stamped.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "geometry_msgs/msg/twist_stamped.hpp"
+#include "moveit_msgs/msg/cartesian_trajectory.hpp"
+#include "nav_msgs/msg/path.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "realtime_tools/realtime_buffer.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "geometry_msgs/msg/pose_stamped.hpp"
-#include "geometry_msgs/msg/twist_stamped.hpp"
-#include "geometry_msgs/msg/accel_stamped.hpp"
-#include "nav_msgs/msg/path.hpp"
-#include "moveit_msgs/msg/cartesian_trajectory.hpp"
 #include "trajectory_msgs/msg/joint_trajectory.hpp"
 
 // Pinocchio includes
@@ -58,23 +58,36 @@ struct _indices {
     int_idx endIdx;
 } typedef Indices;
 
+struct _taskSpaceCommand {
+    pin::SE3 pose;
+    pin::Motion velocity;
+    pin::Motion acceleration;
+} typedef TaskSpaceCommand;
+
+struct _taskTrajectoryPoint {
+    pin::SE3 pose;
+    pin::Motion velocity;
+    pin::Motion acceleration;
+    rclcpp::Duration time_from_start = rclcpp::Duration(0, 0);
+} typedef TaskTrajectoryPoint;
+
 class YumiUdwadiaController : public controller_interface::ControllerInterface {
    public:
     YumiUdwadiaController();
 
     controller_interface::InterfaceConfiguration command_interface_configuration() const override;
     controller_interface::InterfaceConfiguration state_interface_configuration() const override;
-    controller_interface::return_type update(const rclcpp::Time& time, const rclcpp::Duration& period) override;
+    controller_interface::return_type update(const rclcpp::Time &time, const rclcpp::Duration &period) override;
 
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_init() override;
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(
-        const rclcpp_lifecycle::State& previous_state
+        const rclcpp_lifecycle::State &previous_state
     ) override;
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_activate(
-        const rclcpp_lifecycle::State& previous_state
+        const rclcpp_lifecycle::State &previous_state
     ) override;
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_deactivate(
-        const rclcpp_lifecycle::State& previous_state
+        const rclcpp_lifecycle::State &previous_state
     ) override;
 
    private:
@@ -85,22 +98,22 @@ class YumiUdwadiaController : public controller_interface::ControllerInterface {
     void robot_description_callback(const std_msgs::msg::String::SharedPtr msg);
 
     // Wait for robot description with timeout
-    bool wait_for_robot_description(const rclcpp::Duration& timeout);
+    bool wait_for_robot_description(const rclcpp::Duration &timeout);
 
     // Compute control forces using QP optimization
     VecXd get_control_forces(
-        pin::SE3& desPos,
-        pin::Motion& desVel,
-        pin::Motion& desAcc
+        pin::SE3 &desPos,
+        pin::Motion &desVel,
+        pin::Motion &desAcc
     );
 
     std::pair<MatXd, VecXd> get_affine_desc(
-        MatXd& jacDiff,
-        MatXd& dJacDiff,
-        pin::Motion& vel,
-        pin::Motion& velDes,
-        pin::SE3& t,
-        pin::SE3& tDes,
+        MatXd &jacDiff,
+        MatXd &dJacDiff,
+        pin::Motion &vel,
+        pin::Motion &velDes,
+        pin::SE3 &t,
+        pin::SE3 &tDes,
         double kD,
         double kP
     );
@@ -110,18 +123,18 @@ class YumiUdwadiaController : public controller_interface::ControllerInterface {
     );
 
     std::pair<MatXd, VecXd> get_control_affine_desc(
-        pin::SE3& desPos,
-        pin::Motion& desVel,
-        pin::Motion& desAcc,
+        pin::SE3 &desPos,
+        pin::Motion &desVel,
+        pin::Motion &desAcc,
         int_idx idx,
         bool recomputeForwardKin = true
     );
 
-    Vec6d error_in_se3(const pin::SE3& t, const pin::SE3& t_des);
+    Vec6d error_in_se3(const pin::SE3 &t, const pin::SE3 &t_des);
 
-    void forward_kin(VecXd& q, VecXd& v, bool computeSecondDerivatives = true);
+    void forward_kin(VecXd &q, VecXd &v, bool computeSecondDerivatives = true);
 
-    void forward_kin(VecXd& q);
+    void forward_kin(VecXd &q);
 
     MatXd get_mass_matrix();
 
@@ -143,20 +156,9 @@ class YumiUdwadiaController : public controller_interface::ControllerInterface {
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr robot_description_subscriber_;
 
     // Buffer for task space desired pose
-    struct TaskSpaceCommand {
-        pin::SE3 pose;
-        pin::Motion velocity;
-        pin::Motion acceleration;
-    };
     realtime_tools::RealtimeBuffer<TaskSpaceCommand> task_command_buffer_;
 
     // Buffer for task space trajectory
-    struct TaskTrajectoryPoint {
-        pin::SE3 pose;
-        pin::Motion velocity;
-        pin::Motion acceleration;
-        rclcpp::Time time_from_start;
-    };
     realtime_tools::RealtimeBuffer<std::vector<TaskTrajectoryPoint>> task_trajectory_buffer_;
     rclcpp::Time trajectory_start_time_;
     bool has_trajectory_ = false;
@@ -169,13 +171,15 @@ class YumiUdwadiaController : public controller_interface::ControllerInterface {
     void trajectory_command_callback(const moveit_msgs::msg::CartesianTrajectory::SharedPtr msg);
 
     // Trajectory interpolation
-    bool interpolate_task_trajectory(const rclcpp::Time& current_time, pin::SE3& pose, pin::Motion& velocity, pin::Motion& acceleration);
+    bool interpolate_task_trajectory(const rclcpp::Time &current_time, pin::SE3 &pose, pin::Motion &velocity, pin::Motion &acceleration);
 
     // Convert between Pinocchio and ROS message types
-    pin::SE3 pose_msg_to_se3(const geometry_msgs::msg::Pose& pose_msg);
-    pin::Motion twist_msg_to_motion(const geometry_msgs::msg::Twist& twist_msg);
-    pin::Motion accel_msg_to_motion(const geometry_msgs::msg::Accel& accel_msg);
-    
+    pin::SE3 pose_msg_to_se3(const geometry_msgs::msg::Pose &pose_msg);
+    geometry_msgs::msg::Pose se3_to_pose_msg(const pin::SE3 &se3);
+    pin::Motion twist_msg_to_motion(const geometry_msgs::msg::Twist &twist_msg);
+    geometry_msgs::msg::Twist motion_to_twist_msg(const pin::Motion &motion);
+    pin::Motion accel_msg_to_motion(const geometry_msgs::msg::Accel &accel_msg);
+
     // Pinocchio model and data
     pin::Model model_;
     pin::Data model_data_;
@@ -185,7 +189,8 @@ class YumiUdwadiaController : public controller_interface::ControllerInterface {
     VecXd biasForces_;  // Bias forces
 
     // Debug publisher for model state
-    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr debug_publisher_;
+    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr debug_joints_publisher_;
+    rclcpp::Publisher<moveit_msgs::msg::CartesianTrajectoryPoint>::SharedPtr debug_cartesian_publisher_;
 
     // Parameters
     std::string robot_description_;
@@ -195,7 +200,6 @@ class YumiUdwadiaController : public controller_interface::ControllerInterface {
     double constraint_kp_ = 100.0;    // Constraint position gain (for end-effector constraints)
     double constraint_kd_ = 10.0;     // Constraint velocity gain
     double control_weight_ = 1.0;     // Weight for the control cost in QP
-    double constraint_weight_ = 1.0;  // Weight for constraint satisfaction in QP
 
     // Flag to track if robot description has been received
     bool robot_description_received_ = false;

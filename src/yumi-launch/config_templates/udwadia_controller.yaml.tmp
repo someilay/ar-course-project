@@ -33,8 +33,7 @@
     constraint_velocity_gain: 10.0
     
     # Weights for the QP solver
-    control_weight: 1.0
-    constraint_weight: 1.0
+    control_weight: 50.0
     
     # QP solver parameters
     qp_max_iterations: 100
@@ -46,11 +45,19 @@
     
     # Relative transform between end effectors
     tdiff_x: 0.0
-    tdiff_y: 1.0
+    tdiff_y: 0.4
     tdiff_z: 0.0
     tdiff_roll: 0.0
     tdiff_pitch: 0.0
     tdiff_yaw: 0.0
+    
+    # Initial position and orientation
+    initial_position_x: 0.6
+    initial_position_y: -0.2
+    initial_position_z: 0.5
+    initial_orientation_roll: 0.0
+    initial_orientation_pitch: 0.0
+    initial_orientation_yaw: 0.0
     
     # Robot description topic
     robot_description_topic: {robot_description_topic} 

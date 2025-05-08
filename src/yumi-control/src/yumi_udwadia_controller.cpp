@@ -23,18 +23,35 @@ pin::SE3 YumiUdwadiaController::pose_msg_to_se3(const geometry_msgs::msg::Pose& 
     // Extract position
     Vec3d position;
     position << pose_msg.position.x, pose_msg.position.y, pose_msg.position.z;
-    
+
     // Extract orientation as quaternion and convert to rotation matrix
     Eigen::Quaterniond quat(
-        pose_msg.orientation.w, 
-        pose_msg.orientation.x, 
-        pose_msg.orientation.y, 
+        pose_msg.orientation.w,
+        pose_msg.orientation.x,
+        pose_msg.orientation.y,
         pose_msg.orientation.z
     );
     Mat3d rotation = quat.toRotationMatrix();
-    
+
     // Create SE3 transform
     return pin::SE3(rotation, position);
+}
+
+geometry_msgs::msg::Pose YumiUdwadiaController::se3_to_pose_msg(const pin::SE3& se3) {
+    geometry_msgs::msg::Pose pose_msg;
+    pose_msg.position.x = se3.translation()[0];
+    pose_msg.position.y = se3.translation()[1];
+    pose_msg.position.z = se3.translation()[2];
+
+    // Extract orientation from rotation matrix
+    Eigen::Matrix3d rotation = se3.rotation();
+    Eigen::Quaterniond quat(rotation);
+    pose_msg.orientation.x = quat.x();
+    pose_msg.orientation.y = quat.y();
+    pose_msg.orientation.z = quat.z();
+    pose_msg.orientation.w = quat.w();
+
+    return pose_msg;
 }
 
 // Utility function to convert a ROS Twist message to a Pinocchio spatial motion
@@ -42,13 +59,26 @@ pin::Motion YumiUdwadiaController::twist_msg_to_motion(const geometry_msgs::msg:
     // Extract linear velocity
     Vec3d linear;
     linear << twist_msg.linear.x, twist_msg.linear.y, twist_msg.linear.z;
-    
+
     // Extract angular velocity
     Vec3d angular;
     angular << twist_msg.angular.x, twist_msg.angular.y, twist_msg.angular.z;
-    
+
     // Create spatial motion
     return pin::Motion(linear, angular);
+}
+
+geometry_msgs::msg::Twist YumiUdwadiaController::motion_to_twist_msg(const pin::Motion& motion) {
+    geometry_msgs::msg::Twist twist_msg;
+    twist_msg.linear.x = motion.linear()[0];
+    twist_msg.linear.y = motion.linear()[1];
+    twist_msg.linear.z = motion.linear()[2];
+
+    twist_msg.angular.x = motion.angular()[0];
+    twist_msg.angular.y = motion.angular()[1];
+    twist_msg.angular.z = motion.angular()[2];
+
+    return twist_msg;
 }
 
 pin::Motion YumiUdwadiaController::accel_msg_to_motion(const geometry_msgs::msg::Accel& accel_msg) {
@@ -98,21 +128,30 @@ YumiUdwadiaController::on_init() {
         auto_declare<double>("velocity_gain", 10.0);
         auto_declare<double>("constraint_position_gain", 100.0);
         auto_declare<double>("constraint_velocity_gain", 10.0);
-        auto_declare<double>("control_weight", 1.0);
-        auto_declare<double>("constraint_weight", 1.0);
+        auto_declare<double>("control_weight", 40.0);
         auto_declare<int>("qp_max_iterations", 100);
         auto_declare<double>("qp_tolerance", 1e-4);
         auto_declare<std::string>("robot_description_topic", "robot_description");
         auto_declare<std::string>("start_link_name", "undefined");
         auto_declare<std::string>("end_link_name", "undefined");
-        
+
         // Parameters for tDiff_ (relative transform between links)
         auto_declare<double>("tdiff_x", 0.0);
-        auto_declare<double>("tdiff_y", 1.0);
+        auto_declare<double>("tdiff_y", 0.4);
         auto_declare<double>("tdiff_z", 0.0);
         auto_declare<double>("tdiff_roll", 0.0);
         auto_declare<double>("tdiff_pitch", 0.0);
         auto_declare<double>("tdiff_yaw", 0.0);
+
+        // Parameters for initial position
+        auto_declare<double>("initial_position_x", 0.6);
+        auto_declare<double>("initial_position_y", -0.2);
+        auto_declare<double>("initial_position_z", 0.5);
+
+        // Parameters for initial orientation (in degrees)
+        auto_declare<double>("initial_orientation_roll", 0.0);
+        auto_declare<double>("initial_orientation_pitch", 0.0);
+        auto_declare<double>("initial_orientation_yaw", 0.0);
 
         // Initialize task space command buffer with identity pose and zero velocity/acceleration
         TaskSpaceCommand default_command;
@@ -120,7 +159,7 @@ YumiUdwadiaController::on_init() {
         default_command.velocity = pin::Motion::Zero();
         default_command.acceleration = pin::Motion::Zero();
         task_command_buffer_.writeFromNonRT(default_command);
-        
+
         // Initialize task trajectory buffer with empty vector
         task_trajectory_buffer_.writeFromNonRT(std::vector<TaskTrajectoryPoint>{});
     } catch (const std::exception& e) {
@@ -146,7 +185,6 @@ YumiUdwadiaController::on_configure(const rclcpp_lifecycle::State& /*previous_st
     constraint_kp_ = get_node()->get_parameter("constraint_position_gain").as_double();
     constraint_kd_ = get_node()->get_parameter("constraint_velocity_gain").as_double();
     control_weight_ = get_node()->get_parameter("control_weight").as_double();
-    constraint_weight_ = get_node()->get_parameter("constraint_weight").as_double();
     qp_max_iterations_ = get_node()->get_parameter("qp_max_iterations").as_int();
     qp_tolerance_ = get_node()->get_parameter("qp_tolerance").as_double();
     startLinkName_ = get_node()->get_parameter("start_link_name").as_string();
@@ -159,23 +197,25 @@ YumiUdwadiaController::on_configure(const rclcpp_lifecycle::State& /*previous_st
     double tdiff_roll = get_node()->get_parameter("tdiff_roll").as_double();
     double tdiff_pitch = get_node()->get_parameter("tdiff_pitch").as_double();
     double tdiff_yaw = get_node()->get_parameter("tdiff_yaw").as_double();
-    
+
     // Create the rotation matrix from roll, pitch, yaw
     Eigen::AngleAxisd rollAngle(M_PI * tdiff_roll / 180, Eigen::Vector3d::UnitX());
     Eigen::AngleAxisd pitchAngle(M_PI * tdiff_pitch / 180, Eigen::Vector3d::UnitY());
     Eigen::AngleAxisd yawAngle(M_PI * tdiff_yaw / 180, Eigen::Vector3d::UnitZ());
     Eigen::Quaterniond q = rollAngle * pitchAngle * yawAngle;
     Mat3d rotation = q.toRotationMatrix();
-    
+
     // Create the translation vector
     Vec3d translation(tdiff_x, tdiff_y, tdiff_z);
-    
+
     // Initialize tDiff_ using the rotation and translation
     tDiff_ = pin::SE3(rotation, translation);
-    
-    RCLCPP_INFO(get_node()->get_logger(), 
-                "Initialized tDiff_ with x: %.3f, y: %.3f, z: %.3f, roll: %.3f, pitch: %.3f, yaw: %.3f", 
-                tdiff_x, tdiff_y, tdiff_z, tdiff_roll, tdiff_pitch, tdiff_yaw);
+
+    RCLCPP_INFO(
+        get_node()->get_logger(),
+        "Initialized tDiff_ with x: %.3f, y: %.3f, z: %.3f, roll: %.3f, pitch: %.3f, yaw: %.3f",
+        tdiff_x, tdiff_y, tdiff_z, tdiff_roll, tdiff_pitch, tdiff_yaw
+    );
 
     // Get robot description topic
     robot_description_topic_ = get_node()->get_parameter("robot_description_topic").as_string();
@@ -200,8 +240,11 @@ YumiUdwadiaController::on_configure(const rclcpp_lifecycle::State& /*previous_st
     );
 
     // Create debug publisher
-    debug_publisher_ = get_node()->create_publisher<sensor_msgs::msg::JointState>(
-        "~/debug", rclcpp::SystemDefaultsQoS()
+    debug_joints_publisher_ = get_node()->create_publisher<sensor_msgs::msg::JointState>(
+        "~/debug/joints", rclcpp::SystemDefaultsQoS()
+    );
+    debug_cartesian_publisher_ = get_node()->create_publisher<moveit_msgs::msg::CartesianTrajectoryPoint>(
+        "~/debug/cartesian", rclcpp::SystemDefaultsQoS()
     );
 
     // Wait for robot description with a timeout of 10 seconds
@@ -267,7 +310,27 @@ YumiUdwadiaController::on_activate(const rclcpp_lifecycle::State& /*previous_sta
     default_command.pose = pin::SE3::Identity();
     default_command.velocity = pin::Motion::Zero();
     default_command.acceleration = pin::Motion::Zero();
-    default_command.pose.translation() = Vec3d(0.51, 0.19, 0.51);
+
+    // Get initial position from parameters
+    double initial_x = get_node()->get_parameter("initial_position_x").as_double();
+    double initial_y = get_node()->get_parameter("initial_position_y").as_double();
+    double initial_z = get_node()->get_parameter("initial_position_z").as_double();
+
+    // Get initial orientation from parameters (in degrees)
+    double initial_roll = get_node()->get_parameter("initial_orientation_roll").as_double();
+    double initial_pitch = get_node()->get_parameter("initial_orientation_pitch").as_double();
+    double initial_yaw = get_node()->get_parameter("initial_orientation_yaw").as_double();
+
+    // Create rotation matrix from roll, pitch, yaw
+    Eigen::AngleAxisd rollAngle(M_PI * initial_roll / 180, Eigen::Vector3d::UnitX());
+    Eigen::AngleAxisd pitchAngle(M_PI * initial_pitch / 180, Eigen::Vector3d::UnitY());
+    Eigen::AngleAxisd yawAngle(M_PI * initial_yaw / 180, Eigen::Vector3d::UnitZ());
+    Eigen::Quaterniond q = rollAngle * pitchAngle * yawAngle;
+    Mat3d rotation = q.toRotationMatrix();
+
+    // Set initial pose with position and orientation
+    default_command.pose = pin::SE3(rotation, Vec3d(initial_x, initial_y, initial_z));
+
     task_command_buffer_.writeFromNonRT(default_command);
 
     // Reset trajectory buffer
@@ -339,12 +402,12 @@ bool YumiUdwadiaController::initialize_robot_model() {
         indices_.startIdx = model_.getBodyId(startLinkName_);
         indices_.endIdx = model_.getBodyId(endLinkName_);
 
-        if (indices_.startIdx == (int_idx) model_.nframes) {
+        if (indices_.startIdx == (int_idx)model_.nframes) {
             RCLCPP_ERROR(get_node()->get_logger(), "Start link %s not found in the model", startLinkName_.c_str());
             return false;
         }
 
-        if (indices_.endIdx == (int_idx) model_.nframes) {
+        if (indices_.endIdx == (int_idx)model_.nframes) {
             RCLCPP_ERROR(get_node()->get_logger(), "End link %s not found in the model", endLinkName_.c_str());
             return false;
         }
@@ -371,6 +434,7 @@ VecXd YumiUdwadiaController::get_control_forces(pin::SE3& desPos, pin::Motion& d
     auto [aConMat, bConVec] = get_control_affine_desc(desPos, desVel, desAcc, indices_.startIdx);
 
     qp_solver_->settings.eps_abs = qp_tolerance_;
+    qp_solver_->settings.max_iter = qp_max_iterations_;
     qp_solver_->settings.initial_guess =
         firstCall_ ? prox::InitialGuessStatus::NO_INITIAL_GUESS : prox::InitialGuessStatus::WARM_START;
     qp_solver_->settings.verbose = false;
@@ -491,7 +555,7 @@ std::pair<MatXd, VecXd> YumiUdwadiaController::get_affine_desc(
     double kP
 ) {
     // matrix / vector size
-    int nc = (int)q_.size();
+    int nc = 6;
     int nv = (int)v_.size();
     int rotShift = 3;
 
@@ -611,7 +675,7 @@ YumiUdwadiaController::update(const rclcpp::Time& time, const rclcpp::Duration& 
         desired_pose = task_command.pose;
         desired_velocity = task_command.velocity;
         desired_acceleration = task_command.acceleration;
-        
+
         // No active trajectory anymore
         has_trajectory_ = false;
     }
@@ -631,15 +695,22 @@ YumiUdwadiaController::update(const rclcpp::Time& time, const rclcpp::Duration& 
     }
 
     // Publish debug info
-    auto debug_msg = std::make_unique<sensor_msgs::msg::JointState>();
-    debug_msg->header.stamp = time;
+    auto debug_joints_msg = std::make_unique<sensor_msgs::msg::JointState>();
+    debug_joints_msg->header.stamp = time;
     for (size_t i = 0; i < joint_names_.size(); ++i) {
-        debug_msg->name.push_back(joint_names_[i]);
-        debug_msg->position.push_back(q_(gazebo_indices_to_pin_q_idx_[i]));
-        debug_msg->velocity.push_back(v_(gazebo_indices_to_pin_v_idx_[i]));
-        debug_msg->effort.push_back(tau(gazebo_indices_to_pin_v_idx_[i]));
+        debug_joints_msg->name.push_back(joint_names_[i]);
+        debug_joints_msg->position.push_back(q_(gazebo_indices_to_pin_q_idx_[i]));
+        debug_joints_msg->velocity.push_back(v_(gazebo_indices_to_pin_v_idx_[i]));
+        debug_joints_msg->effort.push_back(tau(gazebo_indices_to_pin_v_idx_[i]));
     }
-    debug_publisher_->publish(std::move(debug_msg));
+    debug_joints_publisher_->publish(std::move(debug_joints_msg));
+
+    // Publish cartesian debug info
+    auto debug_cartesian_msg = std::make_unique<moveit_msgs::msg::CartesianTrajectoryPoint>();
+    debug_cartesian_msg->time_from_start = rclcpp::Duration(std::chrono::nanoseconds(time.nanoseconds()));
+    debug_cartesian_msg->point.pose = se3_to_pose_msg(model_data_.oMf[indices_.startIdx]);
+    debug_cartesian_msg->point.velocity = motion_to_twist_msg(get_classic_vel(indices_.startIdx, false));
+    debug_cartesian_publisher_->publish(std::move(debug_cartesian_msg));
 
     // Log performance info periodically
     RCLCPP_DEBUG(
@@ -656,20 +727,20 @@ void YumiUdwadiaController::pose_command_callback(
 ) {
     // Create a new task space command
     TaskSpaceCommand command;
-    
+
     // Convert the pose message to SE3
     command.pose = pose_msg_to_se3(msg->pose);
-    
+
     // Set zero velocity and acceleration for a static pose command
     command.velocity = pin::Motion::Zero();
     command.acceleration = pin::Motion::Zero();
-    
+
     // Clear any active trajectory when receiving direct pose commands
     has_trajectory_ = false;
-    
+
     // Write command to buffer to be used in the real-time update loop
     task_command_buffer_.writeFromNonRT(command);
-    
+
     RCLCPP_INFO(
         get_node()->get_logger(),
         "Received pose command: position [%.2f, %.2f, %.2f]",
@@ -696,7 +767,7 @@ void YumiUdwadiaController::trajectory_command_callback(
     for (const auto& point : msg->points) {
         // Create task space trajectory point
         TaskTrajectoryPoint tp;
-        tp.time_from_start = rclcpp::Time(point.time_from_start.nanosec);
+        tp.time_from_start = rclcpp::Duration(point.time_from_start.sec, point.time_from_start.nanosec);
 
         tp.pose = pose_msg_to_se3(point.point.pose);
         tp.velocity = twist_msg_to_motion(point.point.velocity);
@@ -774,11 +845,11 @@ bool YumiUdwadiaController::interpolate_task_trajectory(
 
     // Interpolate position (SE3 interpolation)
     pose = pin::SE3::Interpolate(prev_point.pose, next_point.pose, alpha);
-    
+
     // Linear interpolation for velocity
     velocity.linear() = prev_point.velocity.linear() + alpha * (next_point.velocity.linear() - prev_point.velocity.linear());
     velocity.angular() = prev_point.velocity.angular() + alpha * (next_point.velocity.angular() - prev_point.velocity.angular());
-    
+
     // Linear interpolation for acceleration
     acceleration.linear() = prev_point.acceleration.linear() + alpha * (next_point.acceleration.linear() - prev_point.acceleration.linear());
     acceleration.angular() = prev_point.acceleration.angular() + alpha * (next_point.acceleration.angular() - prev_point.acceleration.angular());
