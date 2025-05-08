@@ -27,10 +27,10 @@
       - {body_name}_joint_7_l
     
     # Control gains
-    position_gain: 100.0
-    velocity_gain: 10.0
-    constraint_position_gain: 100.0
-    constraint_velocity_gain: 10.0
+    position_gain: 500.0
+    velocity_gain: 22.4
+    constraint_position_gain: 1000.0
+    constraint_velocity_gain: 31.6
     
     # Weights for the QP solver
     control_weight: 50.0

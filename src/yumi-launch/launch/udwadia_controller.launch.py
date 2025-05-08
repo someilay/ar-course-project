@@ -38,6 +38,9 @@ def generate_launch_description():
     target_pose_topic = launch.substitutions.PathJoinSubstitution(
         [ns, controller_name_value, "command"]
     )
+    debug_cartesian_topic = launch.substitutions.PathJoinSubstitution(
+        [ns, controller_name_value, "debug", "cartesian"]
+    )
 
     # Define arguments
     ld.add_action(
@@ -112,7 +115,12 @@ def generate_launch_description():
         package="yumi-udwadia-gui",
         executable="yumi_gui",
         name="yumi_udwadia_gui",
-        parameters=[{"target_pose_topic": target_pose_topic}],
+        parameters=[
+            {
+                "target_pose_topic": target_pose_topic,
+                "debug_cartesian_topic": debug_cartesian_topic,
+            }
+        ],
         output="screen",
         condition=launch.conditions.IfCondition(use_gui),
     )
