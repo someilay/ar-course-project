@@ -43,6 +43,7 @@ namespace yumi_control {
 namespace pin = pinocchio;
 namespace prox = proxsuite::proxqp;
 
+// Eigen type aliases for common vector/matrix dimensions
 using VecXd = Eigen::VectorXd;
 using Vec3d = Eigen::Vector3d;
 using Vec4d = Eigen::Vector4d;
@@ -53,17 +54,20 @@ using Mat3d = Eigen::Matrix3d;
 
 using int_idx = pin::JointIndex;
 
+// Joint index range struct
 struct _indices {
     int_idx startIdx;
     int_idx endIdx;
 } typedef Indices;
 
+// Task space command for pose, velocity, and acceleration
 struct _taskSpaceCommand {
     pin::SE3 pose;
     pin::Motion velocity;
     pin::Motion acceleration;
 } typedef TaskSpaceCommand;
 
+// Single point in a task space trajectory
 struct _taskTrajectoryPoint {
     pin::SE3 pose;
     pin::Motion velocity;
@@ -71,6 +75,9 @@ struct _taskTrajectoryPoint {
     rclcpp::Duration time_from_start = rclcpp::Duration(0, 0);
 } typedef TaskTrajectoryPoint;
 
+/**
+ * Controller implementing Udwadia's formulation for task space control of YuMi robot
+ */
 class YumiUdwadiaController : public controller_interface::ControllerInterface {
    public:
     YumiUdwadiaController();
@@ -107,6 +114,7 @@ class YumiUdwadiaController : public controller_interface::ControllerInterface {
         pin::Motion &desAcc
     );
 
+    // Get affine description of task constraint (A*qddot = b)
     std::pair<MatXd, VecXd> get_affine_desc(
         MatXd &jacDiff,
         MatXd &dJacDiff,
@@ -118,10 +126,12 @@ class YumiUdwadiaController : public controller_interface::ControllerInterface {
         double kP
     );
 
+    // Get affine description for joint/link constraints
     std::pair<MatXd, VecXd> get_constraints_affine_desc(
         bool recomputeForwardKin = true
     );
 
+    // Get affine description for control task
     std::pair<MatXd, VecXd> get_control_affine_desc(
         pin::SE3 &desPos,
         pin::Motion &desVel,
@@ -130,18 +140,25 @@ class YumiUdwadiaController : public controller_interface::ControllerInterface {
         bool recomputeForwardKin = true
     );
 
+    // Compute error between current and desired pose in SE3
     Vec6d error_in_se3(const pin::SE3 &t, const pin::SE3 &t_des);
 
+    // Forward kinematics with first and optionally second derivatives
     void forward_kin(VecXd &q, VecXd &v, bool computeSecondDerivatives = true);
 
+    // Forward kinematics with position only
     void forward_kin(VecXd &q);
 
+    // Get mass matrix from model
     MatXd get_mass_matrix();
 
+    // Get Jacobian for specified frame/link
     MatXd get_jacobian(int_idx idx, bool recomputeJacs = true);
 
+    // Get time derivative of Jacobian
     MatXd get_jacobian_time_variation(int_idx idx, bool recomputeJacs = true);
 
+    // Get classical velocity for specified frame/link
     pin::Motion get_classic_vel(
         int_idx idx, bool recomputeForwardKin = true
     );
@@ -208,7 +225,7 @@ class YumiUdwadiaController : public controller_interface::ControllerInterface {
     std::unordered_map<size_t, int> gazebo_indices_to_pin_q_idx_;
     std::unordered_map<size_t, int> gazebo_indices_to_pin_v_idx_;
 
-    // QP solver
+    // QP solver for computing optimal control forces
     std::shared_ptr<prox::dense::QP<double>> qp_solver_;
 
     // QP solver parameters
