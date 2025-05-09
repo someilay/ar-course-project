@@ -63,14 +63,9 @@ RUN sudo ln -sf /usr/include/python3.10 /usr/include/boost/python310
 
 # Copy the entrypoint and bashrc scripts so we have 
 # our container's environment set up correctly
-# COPY entrypoint.sh /entrypoint.sh
 COPY bashrc /home/${USERNAME}/.bashrc
 
 USER $USERNAME
 
-# COPY entrypoint.sh ~/entrypoint.sh
-
 # Set up entrypoint and default command
-# ENTRYPOINT ["/bin/bash", "~/entrypoint.sh"]
-# CMD ["bash"]
 ENTRYPOINT ["/bin/bash"]
