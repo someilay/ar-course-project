@@ -6,7 +6,9 @@
 <script src="presentation_files/libs/quarto-html/tippy.umd.min.js"></script>
 <link href="presentation_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="presentation_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="presentation_files/libs/quarto-html/quarto-syntax-highlighting-081ad999100379510ae6a1de97f98ad9.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+<link href="presentation_files/libs/quarto-html/quarto-syntax-highlighting-081ad999100379510ae6a1de97f98ad9.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="presentation_files/libs/quarto-contrib/videojs/video.min.js"></script>
+<link href="presentation_files/libs/quarto-contrib/videojs/video-js.css" rel="stylesheet"><meta charset="utf-8">
   <meta name="generator" content="quarto-1.7.30">
 
   <meta name="author" content="Ilia Milioshin">
@@ -452,9 +454,13 @@ Figure&nbsp;4: Data flow of <span class="math inline">\(\texttt{ros_control}\)</
 </ul>
 </div>
 </section>
-<section id="simulation-video" class="slide level2">
-<h2>Simulation video</h2>
-<iframe data-external="1" src="https://www.youtube.com/embed/JCOUIWzbPGg" width="100%" height="85%" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
+<section id="textttyumiinversedynamicscontroller" class="slide level2">
+<h2><span class="math inline">\(\texttt{YumiInverseDynamicsController}\)</span></h2>
+<video id="video_shortcode_videojs_video1" class="video-js vjs-default-skin vjs-fluid" controls="" preload="auto" data-setup="{}" title=""><source src="videos/id_controller.mp4"></video>
+</section>
+<section id="textttyumiudwadiacontroller" class="slide level2">
+<h2><span class="math inline">\(\texttt{YumiUdwadiaController}\)</span></h2>
+<video id="video_shortcode_videojs_video2" class="video-js vjs-default-skin vjs-fluid" controls="" preload="auto" data-setup="{}" title=""><source src="videos/udwadia_controller.mp4"></video>
 </section>
 <section id="plots" class="slide level2">
 <h2>Plots</h2>
@@ -473,9 +479,9 @@ Figure&nbsp;6: Simulation <span class="math inline">\(\color{green}{\mathbf{e}_{
 <div class="fragment fade-up">
 <p><span style="color:green;">Achieved results</span></p>
 <ul>
-<li>Dynamic constraint assignment</li>
 <li>Fast computation (<span class="math inline">\(\approx 100 \mu s\)</span> in experiment)</li>
-<li>Simple prioritaization</li>
+<li>Gazebo simulation</li>
+<li>Custom controllers</li>
 </ul>
 </div>
 <div class="fragment fade-up">
@@ -930,6 +936,8 @@ Figure&nbsp;6: Simulation <span class="math inline">\(\color{green}{\mathbf{e}_{
         }
       });
       </script>
+    <script>videojs(video_shortcode_videojs_video1);</script>
+    <script>videojs(video_shortcode_videojs_video2);</script>
     
 
 </body></html>

@@ -266,9 +266,13 @@ Will be used
   + Relies on Udwadia-Kalaba approach
 :::
 
-## Simulation video
+## $\texttt{YumiInverseDynamicsController}$
 
-{{< video https://youtu.be/JCOUIWzbPGg width="100%" height="85%" >}}
+{{< video videos/id_controller.mp4 >}}
+
+## $\texttt{YumiUdwadiaController}$
+
+{{< video videos/udwadia_controller.mp4 >}}
 
 ## Plots
 
@@ -283,9 +287,9 @@ Will be used
 ::: {.fragment .fade-up}
 [Achieved results]{style="color:green;"}
 
-* Dynamic constraint assignment
 * Fast computation ($\approx 100 \mu s$ in experiment)
-* Simple prioritaization
+* Gazebo simulation
+* Custom controllers
 :::
 
 ::: {.fragment .fade-up}
