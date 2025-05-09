@@ -3,3 +3,6 @@ install
 .vscode
 log
 .cursor
+
+/.quarto/
+/_site/
