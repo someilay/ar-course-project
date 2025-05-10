@@ -3,7 +3,7 @@ title: "Feedback control over constrained robotic systems with ROS 2 / Gazebo"
 callout-icon: false
 author:
   - name: Ilia Milioshin
-    email: i.mileshin@innopolis.university
+    email: i.milyoshin@innopolis.ru
     affiliation: 
       - name: Innopolis University
         city: Innopolis
